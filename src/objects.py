@@ -74,6 +74,9 @@ class Stack:
 
         return [self.cards[ind] for ind in [-2, -1]]
 
+    def empty(self):
+        self.cards.clear()
+
 
 class Game:
     def __init__(self, players: list):
@@ -81,6 +84,7 @@ class Game:
         self.deck = Deck()
         self.stack = Stack()
         self.turn = 0
+        self.cumulativeTurns = 0
 
         slapping_skill_sum = sum([p.slapping_skill for p in self.players])
 
@@ -100,9 +104,6 @@ class Game:
                     break
                 player.hand.accept_card(self.deck.deal_one())
 
-        for player in self.players:
-            print("%s: %d cards" % (player.name, len(player.hand.cards)))
-
     def getSlapWinner(self):
         rand = random()
 
@@ -115,6 +116,14 @@ class Game:
 
     def playTurn(self):
         faceCard = False
+        self.cumulativeTurns += 1
+
+        if self.players[self.turn].hand.cards.__len__() == 0:
+            if self.turn < self.players.__len__() - 1:
+                self.turn += 1
+            else:
+                self.turn = 0
+        print("Turn %d" % self.turn)
 
         if self.stack.countdown == 0:
             [secondUnder, firstUnder] = self.stack.get_top_2()
@@ -124,10 +133,24 @@ class Game:
             if drawnCard.sameAs(secondUnder) or drawnCard.sameAs(firstUnder):
                 slapWinner = self.getSlapWinner()
                 slapWinner.hand.pick_up_cards(self.stack.cards)
+                self.stack.empty()
                 self.turn = self.players.index(slapWinner)
+
+                print("%s won a slap!" % slapWinner.name)
                 return
+
+            if self.turn < len(self.players) - 1:
+                self.turn += 1
+            else:
+                self.turn = 0
         else:
             while not faceCard:
+                if self.players[self.turn].hand.cards.__len__() == 0:
+                    if self.turn < self.players.__len__() - 1:
+                        self.turn += 1
+                    else:
+                        self.turn = 0
+
                 # Get last two cards
                 [secondUnder, firstUnder] = self.stack.get_top_2()
                 # Player draws card onto stack
@@ -138,8 +161,11 @@ class Game:
                     firstUnder
                 ):
                     slapWinner = self.getSlapWinner()
-                    slapWinner.hand.pick_up_cards(self.stack)
+                    slapWinner.hand.pick_up_cards(self.stack.cards)
+                    self.stack.empty()
                     self.turn = self.players.index(slapWinner)
+
+                    print("%s won a slap!" % slapWinner.name)
                     return
 
                 # Handle main game logic
@@ -158,8 +184,14 @@ class Game:
                     if self.stack.countdown == 1:
                         self.players[
                             self.stack.lastFaceCardOwner
-                        ].hand.pick_up_cards(self.stack)
+                        ].hand.pick_up_cards(self.stack.cards)
+                        self.stack.empty()
                         self.turn = self.stack.lastFaceCardOwner
+
+                        print(
+                            "%s won by countdown"
+                            % self.players[self.stack.lastFaceCardOwner].name
+                        )
                         return
 
                     self.stack.countdown -= 1
@@ -167,3 +199,12 @@ class Game:
     def printStatus(self):
         for player in self.players:
             print("%s: %d cards" % (player.name, len(player.hand.cards)))
+        print("Cards in stack: %d" % self.stack.cards.__len__())
+        print(
+            "Total cards: %d"
+            % sum(
+                [len(player.hand.cards) for player in self.players],
+                self.stack.cards.__len__(),
+            )
+        )
+        print("Cumulative Turns: %d" % self.cumulativeTurns)
