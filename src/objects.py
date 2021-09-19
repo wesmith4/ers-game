@@ -85,6 +85,7 @@ class Game:
         self.stack = Stack()
         self.turn = 0
         self.cumulativeTurns = 0
+        self.faceCardValues = {"A": 4, "K": 3, "Q": 2, "J": 1}
 
         slapping_skill_sum = sum([p.slapping_skill for p in self.players])
 
@@ -118,83 +119,42 @@ class Game:
         faceCard = False
         self.cumulativeTurns += 1
 
+        [secondUnder, firstUnder] = self.stack.get_top_2()
+
+        # Determine if this is right person to draw
         if self.players[self.turn].hand.cards.__len__() == 0:
             if self.turn < self.players.__len__() - 1:
                 self.turn += 1
             else:
                 self.turn = 0
-        print("Turn %d" % self.turn)
 
-        if self.stack.countdown == 0:
-            [secondUnder, firstUnder] = self.stack.get_top_2()
-            drawnCard = self.players[self.turn].hand.draw()
-            self.stack.add(drawnCard)
+        drawnCard = self.players[self.turn].hand.draw()
+        self.stack.add(drawnCard)
 
-            if drawnCard.sameAs(secondUnder) or drawnCard.sameAs(firstUnder):
-                slapWinner = self.getSlapWinner()
-                slapWinner.hand.pick_up_cards(self.stack.cards)
-                self.stack.empty()
-                self.turn = self.players.index(slapWinner)
+        # Detect slap situation
+        if drawnCard.sameAs(secondUnder) or drawnCard.sameAs(firstUnder):
+            slapWinner = self.getSlapWinner()
+            slapWinner.hand.pick_up_cards(self.stack.cards)
+            self.stack.empty()
+            self.turn = self.players.index(slapWinner)
+            print("%s won a slap!" % slapWinner.name)
+            return
 
-                print("%s won a slap!" % slapWinner.name)
-                return
-
+        if drawnCard.value in list(self.faceCardValues.keys()):
+            self.stack.lastFaceCardOwner = self.turn
+            self.stack.countdown = self.faceCardValues[drawnCard.value]
             if self.turn < len(self.players) - 1:
                 self.turn += 1
             else:
                 self.turn = 0
         else:
-            while not faceCard:
-                if self.players[self.turn].hand.cards.__len__() == 0:
-                    if self.turn < self.players.__len__() - 1:
-                        self.turn += 1
-                    else:
-                        self.turn = 0
-
-                # Get last two cards
-                [secondUnder, firstUnder] = self.stack.get_top_2()
-                # Player draws card onto stack
-                drawnCard = self.players[self.turn].hand.draw()
-                self.stack.add(drawnCard)
-
-                if drawnCard.sameAs(secondUnder) or drawnCard.sameAs(
-                    firstUnder
-                ):
-                    slapWinner = self.getSlapWinner()
-                    slapWinner.hand.pick_up_cards(self.stack.cards)
-                    self.stack.empty()
-                    self.turn = self.players.index(slapWinner)
-
-                    print("%s won a slap!" % slapWinner.name)
-                    return
-
-                # Handle main game logic
-                faceCardValues = {"J": 1, "Q": 2, "K": 3, "A": 4}
-
-                if drawnCard.value in list(faceCardValues.keys()):
-                    faceCard = True
-                    self.stack.lastFaceCardOwner = self.turn
-                    self.stack.countdown = faceCardValues[drawnCard.value]
-
-                    if self.turn < len(self.players) - 1:
-                        self.turn += 1
-                    else:
-                        self.turn = 0
+            if self.stack.countdown == 0:
+                if self.turn < len(self.players) - 1:
+                    self.turn += 1
                 else:
-                    if self.stack.countdown == 1:
-                        self.players[
-                            self.stack.lastFaceCardOwner
-                        ].hand.pick_up_cards(self.stack.cards)
-                        self.stack.empty()
-                        self.turn = self.stack.lastFaceCardOwner
-
-                        print(
-                            "%s won by countdown"
-                            % self.players[self.stack.lastFaceCardOwner].name
-                        )
-                        return
-
-                    self.stack.countdown -= 1
+                    self.turn = 0
+            elif self.stack.countdown == 1:
+                
 
     def printStatus(self):
         for player in self.players:
