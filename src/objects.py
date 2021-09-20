@@ -210,4 +210,11 @@ class Game:
                 break
 
     def getResults(self):
-        return pd.DataFrame(self.log)
+        results = pd.DataFrame(self.log)
+        return pd.melt(
+            results,
+            id_vars="turn",
+            value_vars=[col for col in results if col.startswith("player")],
+            value_name="cards",
+            var_name="player",
+        )

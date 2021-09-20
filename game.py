@@ -1,14 +1,34 @@
 from src.objects import *
+import streamlit as st
+import plotly.express as px
 
-players = [Player(name) for name in ["Bob", "Ted", "Lisa"]]
+"""
+# ERS Game
+"""
 
-game = Game(players)
-game.shuffle_and_deal()
+numPlayers = st.number_input(
+    "Choose number of players:", value=3, min_value=2, max_value=6, step=1
+)
+slappingSkills = {}
 
-while all([player.hand.get_length() < 52 for player in game.players]):
-    game.playTurn()
-    game.printStatus()
+if numPlayers:
+    for i in range(numPlayers):
+        slappingSkills["player%s" % i] = st.slider(
+            "Player %s slapping skill" % i,
+            min_value=0.00,
+            max_value=1.00,
+            step=0.01,
+            value=0.50,
+        )
 
-history = pd.DataFrame(game.log)
+playGame = st.button("Play Game")
 
-print(history)
+if playGame:
+    players = [Player("player%s" % num) for num in range(numPlayers)]
+    game = Game(players)
+    game.shuffle_and_deal()
+    with st.spinner():
+        game.play()
+    results = game.getResults()
+
+    px.line(results, x="turn", y="cards", color="player", title="ERS Game")
