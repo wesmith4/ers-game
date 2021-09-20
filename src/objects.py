@@ -1,8 +1,7 @@
 from collections import deque
 from random import shuffle, random
 import numpy as np
-from functools import reduce
-
+import pandas as pd
 from numpy.lib.function_base import place
 
 cards = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
@@ -86,6 +85,7 @@ class Game:
         self.turn = 0
         self.cumulativeTurns = 0
         self.faceCardValues = {"A": 4, "K": 3, "Q": 2, "J": 1}
+        self.log = []
 
         slapping_skill_sum = sum([p.slapping_skill for p in self.players])
 
@@ -104,6 +104,7 @@ class Game:
                 if not self.deck.has_cards():
                     break
                 player.hand.accept_card(self.deck.deal_one())
+        self.logStatus()
 
     def getSlapWinner(self):
         rand = random()
@@ -115,46 +116,79 @@ class Game:
 
         return self.players[winner]
 
+    def logStatus(self):
+        status = {"turn": self.cumulativeTurns}
+        for playerNum in range(len(self.players)):
+            status["player%s" % playerNum] = self.players[
+                playerNum
+            ].hand.get_length()
+        self.log.append(status)
+
     def playTurn(self):
         faceCard = False
         self.cumulativeTurns += 1
 
-        [secondUnder, firstUnder] = self.stack.get_top_2()
+        while not faceCard:
 
-        # Determine if this is right person to draw
-        if self.players[self.turn].hand.cards.__len__() == 0:
-            if self.turn < self.players.__len__() - 1:
-                self.turn += 1
-            else:
-                self.turn = 0
+            [secondUnder, firstUnder] = self.stack.get_top_2()
 
-        drawnCard = self.players[self.turn].hand.draw()
-        self.stack.add(drawnCard)
+            # Determine if this is right person to draw
+            foundPlayer = False
+            while not foundPlayer:
+                if self.players[self.turn].hand.cards.__len__() == 0:
+                    print("Player %d ran out of cards" % self.turn)
+                    if self.turn < self.players.__len__() - 1:
+                        self.turn += 1
+                    else:
+                        self.turn = 0
+                else:
+                    foundPlayer = True
 
-        # Detect slap situation
-        if drawnCard.sameAs(secondUnder) or drawnCard.sameAs(firstUnder):
-            slapWinner = self.getSlapWinner()
-            slapWinner.hand.pick_up_cards(self.stack.cards)
-            self.stack.empty()
-            self.turn = self.players.index(slapWinner)
-            print("%s won a slap!" % slapWinner.name)
-            return
+            drawnCard = self.players[self.turn].hand.draw()
+            self.stack.add(drawnCard)
 
-        if drawnCard.value in list(self.faceCardValues.keys()):
-            self.stack.lastFaceCardOwner = self.turn
-            self.stack.countdown = self.faceCardValues[drawnCard.value]
-            if self.turn < len(self.players) - 1:
-                self.turn += 1
-            else:
-                self.turn = 0
-        else:
-            if self.stack.countdown == 0:
+            # Detect slap situation
+            if drawnCard.sameAs(secondUnder) or drawnCard.sameAs(firstUnder):
+                slapWinner = self.getSlapWinner()
+                slapWinner.hand.pick_up_cards(self.stack.cards)
+                self.stack.empty()
+                self.turn = self.players.index(slapWinner)
+                print("%s won a slap!" % slapWinner.name)
+                self.logStatus()
+                return
+
+            if drawnCard.value in list(self.faceCardValues.keys()):
+                faceCard = True
+                self.stack.lastFaceCardOwner = self.turn
+                self.stack.countdown = self.faceCardValues[drawnCard.value]
                 if self.turn < len(self.players) - 1:
                     self.turn += 1
                 else:
                     self.turn = 0
-            elif self.stack.countdown == 1:
-                
+                self.logStatus()
+                return
+            else:
+                if self.stack.countdown == 0:
+                    if self.turn < len(self.players) - 1:
+                        self.turn += 1
+                    else:
+                        self.turn = 0
+                    self.logStatus()
+                    return
+                elif self.stack.countdown == 1:
+                    self.players[
+                        self.stack.lastFaceCardOwner
+                    ].hand.pick_up_cards(self.stack.cards)
+                    self.stack.empty()
+                    self.turn = self.stack.lastFaceCardOwner
+                    print(
+                        "Player %d picks up cards by countdown"
+                        % self.stack.lastFaceCardOwner
+                    )
+                    self.logStatus()
+                    return
+                else:
+                    self.stack.countdown -= 1
 
     def printStatus(self):
         for player in self.players:
@@ -167,4 +201,13 @@ class Game:
                 self.stack.cards.__len__(),
             )
         )
-        print("Cumulative Turns: %d" % self.cumulativeTurns)
+        print("Cumulative Turns: %d\n" % self.cumulativeTurns)
+
+    def play(self):
+        while all([player.hand.get_length() < 52 for player in self.players]):
+            self.playTurn()
+            if self.cumulativeTurns > 100000:
+                break
+
+    def getResults(self):
+        return pd.DataFrame(self.log)

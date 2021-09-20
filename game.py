@@ -9,4 +9,6 @@ while all([player.hand.get_length() < 52 for player in game.players]):
     game.playTurn()
     game.printStatus()
 
-game.printStatus()
+history = pd.DataFrame(game.log)
+
+print(history)
