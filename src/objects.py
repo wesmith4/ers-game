@@ -2,7 +2,7 @@ from collections import deque
 from random import shuffle, random
 import numpy as np
 import pandas as pd
-from numpy.lib.function_base import place
+from time import time
 
 cards = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 
@@ -18,9 +18,9 @@ class Card:
 
 
 class Player:
-    def __init__(self, name: str):
+    def __init__(self, name: str, slapping_skill=None):
         self.name = name
-        self.slapping_skill = random()
+        self.slapping_skill = slapping_skill if slapping_skill else random()
         self.relative_slapping_skill = None
         self.hand = Hand()
 
@@ -204,9 +204,11 @@ class Game:
         print("Cumulative Turns: %d\n" % self.cumulativeTurns)
 
     def play(self):
+        startTime = time()
         while all([player.hand.get_length() < 52 for player in self.players]):
             self.playTurn()
-            if self.cumulativeTurns > 100000:
+            currentTime = time()
+            if currentTime - startTime > 5:
                 break
 
     def getResults(self):

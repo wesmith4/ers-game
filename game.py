@@ -24,11 +24,20 @@ if numPlayers:
 playGame = st.button("Play Game")
 
 if playGame:
-    players = [Player("player%s" % num) for num in range(numPlayers)]
+    players = [
+        Player("player%s" % num, slappingSkills["player%s" % num])
+        for num in range(numPlayers)
+    ]
     game = Game(players)
     game.shuffle_and_deal()
     with st.spinner():
         game.play()
     results = game.getResults()
+    # st.write(results)
+    # st.write([player.slapping_skill for player in game.players])
+    # st.write(game.slapping_prob_cutoffs)
 
-    px.line(results, x="turn", y="cards", color="player", title="ERS Game")
+    fig = px.line(
+        results, x="turn", y="cards", color="player", title="ERS Game"
+    )
+    st.plotly_chart(fig)
