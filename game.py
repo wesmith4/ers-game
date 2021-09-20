@@ -2,7 +2,7 @@ from src.objects import *
 import streamlit as st
 import plotly.express as px
 
-st.title("ERS Simulation")
+st.set_page_config(page_title="ERS Simulation")
 """
 # ERS Game
 """
