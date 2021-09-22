@@ -136,7 +136,7 @@ class Game:
             foundPlayer = False
             while not foundPlayer:
                 if self.players[self.turn].hand.cards.__len__() == 0:
-                    print("Player %d ran out of cards" % self.turn)
+                    # print("Player %d ran out of cards" % self.turn)
                     if self.turn < self.players.__len__() - 1:
                         self.turn += 1
                     else:
@@ -153,7 +153,7 @@ class Game:
                 slapWinner.hand.pick_up_cards(self.stack.cards)
                 self.stack.empty()
                 self.turn = self.players.index(slapWinner)
-                print("%s won a slap!" % slapWinner.name)
+                # print("%s won a slap!" % slapWinner.name)
                 self.logStatus()
                 return
 
@@ -181,10 +181,10 @@ class Game:
                     ].hand.pick_up_cards(self.stack.cards)
                     self.stack.empty()
                     self.turn = self.stack.lastFaceCardOwner
-                    print(
-                        "Player %d picks up cards by countdown"
-                        % self.stack.lastFaceCardOwner
-                    )
+                    # print(
+                    #     "Player %d picks up cards by countdown"
+                    #     % self.stack.lastFaceCardOwner
+                    # )
                     self.logStatus()
                     return
                 else:
@@ -208,7 +208,7 @@ class Game:
         while all([player.hand.get_length() < 52 for player in self.players]):
             self.playTurn()
             currentTime = time()
-            if currentTime - startTime > 5:
+            if currentTime - startTime > 2:
                 break
 
     def getResults(self):
