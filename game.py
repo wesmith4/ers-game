@@ -7,6 +7,7 @@ st.set_page_config(page_title="ERS Simulation")
 # ERS Game
 
 ## Rules
+*Rules according to Bicycle Cards:* https://bicyclecards.com/how-to-play/egyptian-rat-screw/
 
 ### THE PACK
 A standard 52-card deck is used and can include Jokers.
