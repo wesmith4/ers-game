@@ -7,7 +7,7 @@ st.set_page_config(page_title="ERS Simulation")
 # ERS Game
 """
 
-with st.collapse("RULES",expanded=False):
+with st.expander("RULES",expanded=False):
     """
     ## Rules
     *Rules according to Bicycle Cards:* https://bicyclecards.com/how-to-play/egyptian-rat-screw/
