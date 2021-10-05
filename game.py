@@ -4,7 +4,7 @@ import plotly.express as px
 
 st.set_page_config(page_title="ERS Simulation")
 """
-# ERS Game
+# ERS Card Game
 """
 
 with st.expander("RULES",expanded=False):
